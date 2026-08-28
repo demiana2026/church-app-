@@ -1,0 +1,28 @@
+2026-08-28 13:59:55,761 - ERROR - Google Sheets connection failed: Error parsing secrets file at /Users/demianashaker/Desktop/untitled folder 2/.streamlit/secrets.toml: Key name found without value. Reached end of line. (line 1 column 2 char 1)
+2026-08-28 14:06:07,539 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:07:27,800 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:08:22,937 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:08:23,897 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:09:46,348 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:11:54,001 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:12:04,668 - ERROR - Google Sheets connection failed: Registration
+2026-08-28 14:16:59,994 - INFO - Google Sheets tabs found: ['Sheet1', 'Sheet2']
+2026-08-28 14:17:00,364 - ERROR - Google Sheets connection failed: 
+            Could not find the registration sheet.
+
+            Looking for:
+            Registration
+
+            Sheets found:
+            ['Sheet1', 'Sheet2']
+
+            Make sure the tab at the bottom of Google Sheets
+            is named exactly:
+
+            Registration
+            
+2026-08-28 14:17:36,265 - INFO - Google Sheets tabs found: ['Sheet1', 'Registration']
+2026-08-28 14:17:36,587 - INFO - Google Sheets connected successfully.
+2026-08-28 14:17:48,711 - INFO - Google Sheets tabs found: ['Sheet1', 'Registration']
+2026-08-28 14:17:49,057 - INFO - Google Sheets connected successfully.
+2026-08-28 14:17:49,277 - INFO - Registration saved: Demiana Abadir - Station 2 - Cosmetology
