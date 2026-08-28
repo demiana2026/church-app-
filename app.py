@@ -1,4 +1,5 @@
 
+
 """
 St. Anthony Coptic Orthodox Church
 Volunteer Registration System
@@ -21,7 +22,7 @@ from style import apply_styles
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
 REGISTRATION_SHEET = "Registration"
 
-# New Jersey uses America/New_York
+# New Jersey / Eastern Time
 TIME_ZONE = ZoneInfo("America/New_York")
 
 
@@ -42,36 +43,6 @@ st.set_page_config(
 # ============================================================
 
 apply_styles()
-
-
-# ============================================================
-# VOLUNTEER VERSES
-# ============================================================
-
-volunteer_verses = [
-    (
-        "Each of you should use whatever gift you have received "
-        "to serve others, as faithful stewards of God's grace. "
-        "— 1 Peter 4:10"
-    ),
-    (
-        "Whatever you do, work at it with all your heart, "
-        "as working for the Lord, not for human masters. "
-        "— Colossians 3:23"
-    ),
-    (
-        "Serve wholeheartedly, as if you were serving the Lord, "
-        "not people. — Ephesians 6:7"
-    ),
-    (
-        "The greatest among you will be your servant. "
-        "— Matthew 23:11"
-    ),
-    (
-        "Carry each other's burdens, and in this way you will "
-        "fulfill the law of Christ. — Galatians 6:2"
-    )
-]
 
 
 # ============================================================
@@ -165,7 +136,7 @@ st.write(
 
 
 # ============================================================
-# CONNECTION ERROR
+# GOOGLE SHEETS ERROR
 # ============================================================
 
 if not SHEETS_ENABLED:
@@ -183,7 +154,7 @@ if not SHEETS_ENABLED:
 
 
 # ============================================================
-# THANK YOU
+# THANK YOU MESSAGE
 # ============================================================
 
 st.info(
@@ -284,12 +255,16 @@ def create_station(number, station_name):
 
 with st.form("registration_form"):
 
+    # ========================================================
+    # PERSONAL INFORMATION
+    # ========================================================
+
     st.subheader(
         "Personal Information"
     )
 
     st.caption(
-        "First Name, Last Name, and Cell Phone are required."
+        "All fields are required."
     )
 
     col1, col2 = st.columns(
@@ -328,12 +303,12 @@ with st.form("registration_form"):
     with col4:
 
         email = st.text_input(
-            "Email",
+            "Email*",
             placeholder="you@example.com"
         )
 
     age = st.radio(
-        "Age",
+        "Age*",
         [
             "14-18",
             "18+"
@@ -342,15 +317,20 @@ with st.form("registration_form"):
         key="age"
     )
 
+
+    # ========================================================
+    # CHOOSE YOUR STATION
+    # ========================================================
+
     st.divider()
 
     st.header(
-        "Choose Your Station"
+        "Choose Your Station*"
     )
 
     st.write(
-        "Select a station and choose the times "
-        "that work for you. Station selection is optional."
+        "Select the station where you would like to volunteer "
+        "and choose your available times."
     )
 
     station_tabs = st.tabs(
@@ -365,6 +345,11 @@ with st.form("registration_form"):
 
     station_data = {}
 
+
+    # ========================================================
+    # STATION 1
+    # ========================================================
+
     with station_tabs[0]:
 
         station_data[
@@ -373,6 +358,11 @@ with st.form("registration_form"):
             1,
             STATION_NAMES[0]
         )
+
+
+    # ========================================================
+    # STATION 2
+    # ========================================================
 
     with station_tabs[1]:
 
@@ -383,6 +373,11 @@ with st.form("registration_form"):
             STATION_NAMES[1]
         )
 
+
+    # ========================================================
+    # STATION 3
+    # ========================================================
+
     with station_tabs[2]:
 
         station_data[
@@ -391,6 +386,11 @@ with st.form("registration_form"):
             3,
             STATION_NAMES[2]
         )
+
+
+    # ========================================================
+    # STATION 4
+    # ========================================================
 
     with station_tabs[3]:
 
@@ -401,6 +401,11 @@ with st.form("registration_form"):
             STATION_NAMES[3]
         )
 
+
+    # ========================================================
+    # STATION 5
+    # ========================================================
+
     with station_tabs[4]:
 
         station_data[
@@ -410,22 +415,28 @@ with st.form("registration_form"):
             STATION_NAMES[4]
         )
 
+
+    # ========================================================
+    # CONFIRM STATION
+    # ========================================================
+
     st.divider()
 
     st.subheader(
-        "Confirm Your Station"
-    )
-
-    st.caption(
-        "Station selection is optional."
+        "Confirm Your Station*"
     )
 
     chosen_station = st.radio(
-        "Which station are you signing up for?",
+        "Which station are you signing up for?*",
         STATION_NAMES,
         index=None,
         key="chosen_station"
     )
+
+
+    # ========================================================
+    # SUBMIT
+    # ========================================================
 
     submitted = st.form_submit_button(
         "🙏 Submit Volunteer Registration",
@@ -439,44 +450,51 @@ with st.form("registration_form"):
 
 if submitted:
 
-    if (
-        not first_name.strip()
-        or not last_name.strip()
-        or not cell_phone.strip()
-    ):
+    # ========================================================
+    # VALIDATE REQUIRED PERSONAL INFORMATION
+    # ========================================================
+
+    if not first_name.strip():
 
         st.error(
-            "Please complete First Name, Last Name, "
-            "and Cell Phone."
+            "Please enter your First Name."
         )
 
-    elif not SHEETS_ENABLED:
+    elif not last_name.strip():
 
         st.error(
-            "Google Sheets is not connected. "
-            "Your registration cannot be saved."
+            "Please enter your Last Name."
         )
 
-        with st.expander(
-            "Show Google Sheets error"
-        ):
+    elif not cell_phone.strip():
 
-            st.code(
-                sheets_error or "Unknown Google Sheets error."
-            )
+        st.error(
+            "Please enter your Cell Phone."
+        )
+
+    elif not email.strip():
+
+        st.error(
+            "Please enter your Email."
+        )
+
+    elif not age:
+
+        st.error(
+            "Please select your Age."
+        )
+
+    # ========================================================
+    # VALIDATE STATION
+    # ========================================================
+
+    elif not chosen_station:
+
+        st.error(
+            "Please select which station you are signing up for."
+        )
 
     else:
-
-        clean_first_name = first_name.strip()
-        clean_last_name = last_name.strip()
-        clean_phone = cell_phone.strip()
-        clean_email = email.strip()
-
-        selected_station = (
-            chosen_station
-            if chosen_station
-            else "Not Selected"
-        )
 
         selected = station_data.get(
             chosen_station,
@@ -487,74 +505,145 @@ if submitted:
             }
         )
 
-        friday = (
-            ", ".join(selected["friday"])
-            if selected["friday"]
-            else "None"
+        # ====================================================
+        # VALIDATE AVAILABILITY
+        # ====================================================
+
+        total_times = (
+            selected["friday"]
+            + selected["saturday"]
+            + selected["sunday"]
         )
 
-        saturday = (
-            ", ".join(selected["saturday"])
-            if selected["saturday"]
-            else "None"
-        )
-
-        sunday = (
-            ", ".join(selected["sunday"])
-            if selected["sunday"]
-            else "None"
-        )
-
-        timestamp = datetime.now(
-            TIME_ZONE
-        ).strftime(
-            "%Y-%m-%d %I:%M %p"
-        )
-
-        try:
-
-            reg_sheet.append_row(
-                [
-                    clean_first_name,
-                    clean_last_name,
-                    clean_phone,
-                    clean_email,
-                    age,
-                    selected_station,
-                    friday,
-                    saturday,
-                    sunday,
-                    timestamp
-                ],
-                value_input_option="USER_ENTERED"
-            )
-
-            st.success(
-                f"🎉 Registration Complete! "
-                f"Thank you, {clean_first_name}!"
-            )
-
-            st.info(
-                "🙏 We appreciate your willingness "
-                "to serve our community."
-            )
-
-            st.info(
-                f"🕐 Registration Time: {timestamp}"
-            )
-
-        except Exception as e:
+        if not total_times:
 
             st.error(
-                "Your registration could not be saved right now. "
-                "Please contact the volunteer coordinator."
+                "Please select at least one available "
+                "volunteer time for your chosen station."
+            )
+
+        # ====================================================
+        # GOOGLE SHEETS
+        # ====================================================
+
+        elif not SHEETS_ENABLED:
+
+            st.error(
+                "Google Sheets is not connected. "
+                "Your registration cannot be saved."
             )
 
             with st.expander(
                 "Show Google Sheets error"
             ):
 
-                st.code(str(e))
+                st.code(
+                    sheets_error or "Unknown Google Sheets error."
+                )
+
+        # ====================================================
+        # SAVE
+        # ====================================================
+
+        else:
+
+            clean_first_name = first_name.strip()
+            clean_last_name = last_name.strip()
+            clean_phone = cell_phone.strip()
+            clean_email = email.strip()
+
+            selected_station = chosen_station
+
+            friday = (
+                ", ".join(selected["friday"])
+                if selected["friday"]
+                else "None"
+            )
+
+            saturday = (
+                ", ".join(selected["saturday"])
+                if selected["saturday"]
+                else "None"
+            )
+
+            sunday = (
+                ", ".join(selected["sunday"])
+                if selected["sunday"]
+                else "None"
+            )
+
+
+            # =================================================
+            # NEW JERSEY TIME
+            # =================================================
+
+            timestamp = datetime.now(
+                TIME_ZONE
+            ).strftime(
+                "%Y-%m-%d %I:%M %p"
+            )
+
+
+            # =================================================
+            # SAVE TO GOOGLE SHEETS
+            # =================================================
+
+            try:
+
+                reg_sheet.append_row(
+                    [
+                        clean_first_name,
+                        clean_last_name,
+                        clean_phone,
+                        clean_email,
+                        age,
+                        selected_station,
+                        friday,
+                        saturday,
+                        sunday,
+                        timestamp
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
+
+
+                # =============================================
+                # SUCCESS
+                # =============================================
+
+                st.success(
+                    f"🎉 Registration Complete! "
+                    f"Thank you, {clean_first_name}!"
+                )
+
+                st.info(
+                    "🙏 We appreciate your willingness "
+                    "to serve our community."
+                )
+
+                st.info(
+                    f"🕐 Registration Time: {timestamp}"
+                )
+
+
+            # =================================================
+            # SAVE ERROR
+            # =================================================
+
+            except Exception as e:
+
+                st.error(
+                    "Your registration could not be saved right now. "
+                    "Please contact the volunteer coordinator."
+                )
+
+                with st.expander(
+                    "Show Google Sheets error"
+                ):
+
+                    st.code(
+                        str(e)
+                    )
 
 
 # ============================================================
