@@ -19,7 +19,6 @@ from style import apply_styles
 # ============================================================
 
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
-
 REGISTRATION_SHEET = "Registration"
 
 # New Jersey / Eastern Time
@@ -83,7 +82,6 @@ SHEETS_ENABLED = False
 reg_sheet = None
 sheets_error = None
 
-
 try:
 
     scope = [
@@ -91,70 +89,48 @@ try:
         "https://www.googleapis.com/auth/drive"
     ]
 
-    # --------------------------------------------------------
-    # CHECK STREAMLIT SECRETS
-    # --------------------------------------------------------
-
+    # Check Streamlit secrets
     if "gcp_service_account" not in st.secrets:
-
         raise Exception(
             "The gcp_service_account section was not found "
-            "in Streamlit Secrets."
+            "in Streamlit secrets."
         )
 
-    # --------------------------------------------------------
-    # READ SERVICE ACCOUNT FROM SECRETS
-    # --------------------------------------------------------
-
+    # Read service account from secrets
     service_account_info = dict(
         st.secrets["gcp_service_account"]
     )
 
-    # --------------------------------------------------------
-    # CREATE GOOGLE CREDENTIALS
-    # --------------------------------------------------------
-
+    # Create credentials
     credentials = Credentials.from_service_account_info(
         service_account_info,
         scopes=scope
     )
 
-    # --------------------------------------------------------
-    # CONNECT TO GOOGLE SHEETS
-    # --------------------------------------------------------
-
+    # Connect to Google Sheets
     client = gspread.authorize(credentials)
 
     spreadsheet = client.open_by_key(
         SPREADSHEET_ID
     )
 
-    # --------------------------------------------------------
-    # CHECK REGISTRATION SHEET
-    # --------------------------------------------------------
-
+    # Check Registration worksheet
     sheet_names = [
         worksheet.title
         for worksheet in spreadsheet.worksheets()
     ]
 
     if REGISTRATION_SHEET not in sheet_names:
-
         raise Exception(
             f"'{REGISTRATION_SHEET}' was not found. "
             f"Available sheets: {sheet_names}"
         )
-
-    # --------------------------------------------------------
-    # OPEN REGISTRATION SHEET
-    # --------------------------------------------------------
 
     reg_sheet = spreadsheet.worksheet(
         REGISTRATION_SHEET
     )
 
     SHEETS_ENABLED = True
-
 
 except Exception as e:
 
@@ -192,7 +168,7 @@ st.write(
 
 
 # ============================================================
-# GOOGLE SHEETS CONNECTION STATUS
+# GOOGLE SHEETS CONNECTION MESSAGE
 # ============================================================
 
 if not SHEETS_ENABLED:
@@ -218,8 +194,8 @@ if not SHEETS_ENABLED:
 
 st.info(
     "🙏 Thank You for Volunteering\n\n"
-    "Complete the form below to choose your "
-    "volunteer station and preferred times."
+    "Complete the form below to register and "
+    "choose where you would like to serve."
 )
 
 
@@ -232,16 +208,16 @@ st.header(
 )
 
 st.write(
-    "Please provide your information and select "
-    "where you would like to serve."
+    "Please complete all required fields and "
+    "select one station and your available times."
 )
 
 
 # ============================================================
-# STATIONS
+# STATION INFORMATION
 # ============================================================
 
-STATION_NAMES = [
+STATIONS = [
     "Station 1 - Prizes/Kids Games",
     "Station 2 - Cosmetology",
     "Station 3 - Inflatables",
@@ -250,98 +226,99 @@ STATION_NAMES = [
 ]
 
 
-STATION_TABS = [
-    "🎁 Prizes",
-    "💄 Cosmetology",
-    "🎈 Inflatables",
-    "🏀 Basketball",
-    "🍿 Snacking"
-]
-
-
-# ============================================================
-# CREATE STATION
-# ============================================================
-
-def create_station(number, station_name):
-
-    st.subheader(
-        station_name
-    )
-
-    st.caption(
-        "Choose your available volunteer times."
-    )
-
-    day_tabs = st.tabs(
-        [
-            "Friday",
-            "Saturday",
-            "Sunday"
+STATION_OPTIONS = {
+    "Station 1 - Prizes/Kids Games": {
+        "Friday": [
+            "4:30 pm - 7:30 pm (Set up)",
+            "7:15 pm - 10:15 pm (Clean up)"
+        ],
+        "Saturday": [
+            "10:45 am - 1:45 pm (Set up)",
+            "1:30 pm - 4:30 pm",
+            "4:15 pm - 7:15 pm",
+            "7:00 pm - 10:00 pm"
+        ],
+        "Sunday": [
+            "11:45 am - 2:45 pm (Set up)",
+            "2:30 pm - 5:30 pm (Clean up)"
         ]
-    )
+    },
 
-    # --------------------------------------------------------
-    # FRIDAY
-    # --------------------------------------------------------
+    "Station 2 - Cosmetology": {
+        "Friday": [
+            "4:30 pm - 7:30 pm (Set up)",
+            "7:15 pm - 10:15 pm (Clean up)"
+        ],
+        "Saturday": [
+            "10:45 am - 1:45 pm (Set up)",
+            "1:30 pm - 4:30 pm",
+            "4:15 pm - 7:15 pm",
+            "7:00 pm - 10:00 pm"
+        ],
+        "Sunday": [
+            "11:45 am - 2:45 pm (Set up)",
+            "2:30 pm - 5:30 pm (Clean up)"
+        ]
+    },
 
-    with day_tabs[0]:
+    "Station 3 - Inflatables": {
+        "Friday": [
+            "4:30 pm - 7:30 pm (Set up)",
+            "7:15 pm - 10:15 pm (Clean up)"
+        ],
+        "Saturday": [
+            "10:45 am - 1:45 pm (Set up)",
+            "1:30 pm - 4:30 pm",
+            "4:15 pm - 7:15 pm",
+            "7:00 pm - 10:00 pm"
+        ],
+        "Sunday": [
+            "11:45 am - 2:45 pm (Set up)",
+            "2:30 pm - 5:30 pm (Clean up)"
+        ]
+    },
 
-        friday = st.multiselect(
-            "Friday Availability",
-            [
-                "4:30 pm - 7:30 pm (Set up)",
-                "7:15 pm - 10:15 pm (Clean up)"
-            ],
-            key=f"station_{number}_friday"
-        )
+    "Station 4 - Basketball": {
+        "Friday": [
+            "4:30 pm - 7:30 pm (Set up)",
+            "7:15 pm - 10:15 pm (Clean up)"
+        ],
+        "Saturday": [
+            "10:45 am - 1:45 pm (Set up)",
+            "1:30 pm - 4:30 pm",
+            "4:15 pm - 7:15 pm",
+            "7:00 pm - 10:00 pm"
+        ],
+        "Sunday": [
+            "11:45 am - 2:45 pm (Set up)",
+            "2:30 pm - 5:30 pm (Clean up)"
+        ]
+    },
 
-    # --------------------------------------------------------
-    # SATURDAY
-    # --------------------------------------------------------
-
-    with day_tabs[1]:
-
-        saturday = st.multiselect(
-            "Saturday Availability",
-            [
-                "10:45 am - 1:45 pm (Set up)",
-                "1:30 pm - 4:30 pm",
-                "4:15 pm - 7:15 pm",
-                "7:00 pm - 10:00 pm"
-            ],
-            key=f"station_{number}_saturday"
-        )
-
-    # --------------------------------------------------------
-    # SUNDAY
-    # --------------------------------------------------------
-
-    with day_tabs[2]:
-
-        sunday = st.multiselect(
-            "Sunday Availability",
-            [
-                "11:45 am - 2:45 pm (Set up)",
-                "2:30 pm - 5:30 pm (Clean up)"
-            ],
-            key=f"station_{number}_sunday"
-        )
-
-    return {
-        "friday": friday,
-        "saturday": saturday,
-        "sunday": sunday
+    "Station 5 - Snacking": {
+        "Friday": [
+            "4:30 pm - 7:30 pm (Set up)",
+            "7:15 pm - 10:15 pm (Clean up)"
+        ],
+        "Saturday": [
+            "10:45 am - 1:45 pm (Set up)",
+            "1:30 pm - 4:30 pm",
+            "4:15 pm - 7:15 pm",
+            "7:00 pm - 10:00 pm"
+        ],
+        "Sunday": [
+            "11:45 am - 2:45 pm (Set up)",
+            "2:30 pm - 5:30 pm (Clean up)"
+        ]
     }
+}
 
 
 # ============================================================
 # REGISTRATION FORM
 # ============================================================
 
-with st.form(
-    "registration_form"
-):
+with st.form("registration_form"):
 
     # ========================================================
     # PERSONAL INFORMATION
@@ -354,10 +331,6 @@ with st.form(
     st.caption(
         "All fields are required."
     )
-
-    # --------------------------------------------------------
-    # FIRST / LAST NAME
-    # --------------------------------------------------------
 
     col1, col2 = st.columns(
         2,
@@ -380,10 +353,6 @@ with st.form(
             placeholder="Last name"
         )
 
-    # --------------------------------------------------------
-    # PHONE / EMAIL
-    # --------------------------------------------------------
-
     col3, col4 = st.columns(
         2,
         gap="large"
@@ -403,10 +372,6 @@ with st.form(
             placeholder="you@example.com"
         )
 
-    # --------------------------------------------------------
-    # AGE
-    # --------------------------------------------------------
-
     age = st.radio(
         "Age*",
         [
@@ -414,101 +379,114 @@ with st.form(
             "18+"
         ],
         horizontal=True,
-        key="age"
+        key="registration_age"
     )
 
+
     # ========================================================
-    # CHOOSE YOUR STATION
+    # SELECT STATION
     # ========================================================
 
     st.divider()
 
     st.header(
-        "Choose Your Station*"
+        "Choose Your Station"
     )
 
     st.write(
-        "Select the station where you would like to volunteer."
+        "First select the station where you would "
+        "like to volunteer."
     )
 
-    # --------------------------------------------------------
-    # STATION TABS
-    # --------------------------------------------------------
-
-    station_tabs = st.tabs(
-        STATION_TABS
+    chosen_station = st.radio(
+        "Select one station*",
+        STATIONS,
+        index=None,
+        key="registration_station"
     )
 
-    station_data = {}
 
-    # --------------------------------------------------------
-    # STATION 1
-    # --------------------------------------------------------
+    # ========================================================
+    # CHOOSE TIMES
+    # ========================================================
 
-    with station_tabs[0]:
+    st.divider()
 
-        station_data[
-            STATION_NAMES[0]
-        ] = create_station(
-            1,
-            STATION_NAMES[0]
+    st.header(
+        "Choose Your Available Times"
+    )
+
+    if chosen_station is None:
+
+        st.info(
+            "Please select a station above to see "
+            "the available volunteer times."
         )
 
-    # --------------------------------------------------------
-    # STATION 2
-    # --------------------------------------------------------
+        friday = []
+        saturday = []
+        sunday = []
 
-    with station_tabs[1]:
+    else:
 
-        station_data[
-            STATION_NAMES[1]
-        ] = create_station(
-            2,
-            STATION_NAMES[1]
+        st.write(
+            f"Available times for **{chosen_station}**:"
         )
 
-    # --------------------------------------------------------
-    # STATION 3
-    # --------------------------------------------------------
+        station_times = STATION_OPTIONS[
+            chosen_station
+        ]
 
-    with station_tabs[2]:
-
-        station_data[
-            STATION_NAMES[2]
-        ] = create_station(
-            3,
-            STATION_NAMES[2]
+        day_tabs = st.tabs(
+            [
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
         )
 
-    # --------------------------------------------------------
-    # STATION 4
-    # --------------------------------------------------------
+        # ----------------------------------------------------
+        # FRIDAY
+        # ----------------------------------------------------
 
-    with station_tabs[3]:
+        with day_tabs[0]:
 
-        station_data[
-            STATION_NAMES[3]
-        ] = create_station(
-            4,
-            STATION_NAMES[3]
-        )
+            friday = st.multiselect(
+                "Friday Availability*",
+                station_times["Friday"],
+                key="selected_friday"
+            )
 
-    # --------------------------------------------------------
-    # STATION 5
-    # --------------------------------------------------------
+        # ----------------------------------------------------
+        # SATURDAY
+        # ----------------------------------------------------
 
-    with station_tabs[4]:
+        with day_tabs[1]:
 
-        station_data[
-            STATION_NAMES[4]
-        ] = create_station(
-            5,
-            STATION_NAMES[4]
-        )
+            saturday = st.multiselect(
+                "Saturday Availability*",
+                station_times["Saturday"],
+                key="selected_saturday"
+            )
+
+        # ----------------------------------------------------
+        # SUNDAY
+        # ----------------------------------------------------
+
+        with day_tabs[2]:
+
+            sunday = st.multiselect(
+                "Sunday Availability*",
+                station_times["Sunday"],
+                key="selected_sunday"
+            )
+
 
     # ========================================================
     # SUBMIT
     # ========================================================
+
+    st.divider()
 
     submitted = st.form_submit_button(
         "🙏 Submit Volunteer Registration",
@@ -517,7 +495,7 @@ with st.form(
 
 
 # ============================================================
-# PROCESS REGISTRATION
+# PROCESS SUBMISSION
 # ============================================================
 
 if submitted:
@@ -551,52 +529,144 @@ if submitted:
         )
 
     # ========================================================
-    # STATION REQUIRED
+    # REQUIRED STATION
     # ========================================================
 
     elif chosen_station is None:
 
         st.error(
-            "Please select a volunteer station."
+            "Please select a station."
         )
 
     # ========================================================
-    # AVAILABILITY REQUIRED
+    # REQUIRED TIME
+    # ========================================================
+
+    elif not friday and not saturday and not sunday:
+
+        st.error(
+            "Please select at least one available "
+            "volunteer time."
+        )
+
+    # ========================================================
+    # GOOGLE SHEETS
+    # ========================================================
+
+    elif not SHEETS_ENABLED:
+
+        st.error(
+            "Google Sheets is not connected. "
+            "Your registration cannot be saved."
+        )
+
+        with st.expander(
+            "Show Google Sheets error"
+        ):
+
+            st.code(
+                sheets_error
+                or "Unknown Google Sheets error."
+            )
+
+    # ========================================================
+    # SAVE REGISTRATION
     # ========================================================
 
     else:
 
-        selected = station_data.get(
-            chosen_station,
-            {
-                "friday": [],
-                "saturday": [],
-                "sunday": []
-            }
+        clean_first_name = first_name.strip()
+        clean_last_name = last_name.strip()
+        clean_phone = cell_phone.strip()
+        clean_email = email.strip()
+
+        selected_station = chosen_station
+
+        friday_text = (
+            ", ".join(friday)
+            if friday
+            else "None"
         )
 
-        has_availability = (
-            len(selected["friday"]) > 0
-            or len(selected["saturday"]) > 0
-            or len(selected["sunday"]) > 0
+        saturday_text = (
+            ", ".join(saturday)
+            if saturday
+            else "None"
         )
 
-        if not has_availability:
+        sunday_text = (
+            ", ".join(sunday)
+            if sunday
+            else "None"
+        )
 
-            st.error(
-                "Please select at least one "
-                "volunteer availability time."
+        # ====================================================
+        # NEW JERSEY TIMESTAMP
+        # ====================================================
+
+        timestamp = datetime.now(
+            TIME_ZONE
+        ).strftime(
+            "%Y-%m-%d %I:%M %p"
+        )
+
+        # ====================================================
+        # SAVE TO GOOGLE SHEETS
+        # ====================================================
+
+        try:
+
+            reg_sheet.append_row(
+                [
+                    clean_first_name,
+                    clean_last_name,
+                    clean_phone,
+                    clean_email,
+                    age,
+                    selected_station,
+                    friday_text,
+                    saturday_text,
+                    sunday_text,
+                    timestamp
+                ],
+                value_input_option="USER_ENTERED"
             )
 
-        # ====================================================
-        # GOOGLE SHEETS
-        # ====================================================
+            # =================================================
+            # SUCCESS
+            # =================================================
 
-        elif not SHEETS_ENABLED:
+            st.success(
+                f"🎉 Registration Complete! "
+                f"Thank you, {clean_first_name}!"
+            )
+
+            st.info(
+                f"📍 Station: {selected_station}"
+            )
+
+            st.info(
+                f"🕐 Registration Time: {timestamp}"
+            )
+
+            st.info(
+                "🙏 We appreciate your willingness "
+                "to serve our community."
+            )
+
+            st.info(
+                "📖 " + volunteer_verses[
+                    datetime.now(TIME_ZONE).day
+                    % len(volunteer_verses)
+                ]
+            )
+
+        except Exception as e:
 
             st.error(
-                "Google Sheets is not connected. "
-                "Your registration cannot be saved."
+                "Your registration could not be saved "
+                "right now. Please contact the volunteer "
+                "coordinator."
             )
 
             with st.expander(
@@ -604,137 +674,8 @@ if submitted:
             ):
 
                 st.code(
-                    sheets_error
-                    or "Unknown Google Sheets error."
+                    str(e)
                 )
-
-        # ====================================================
-        # SAVE REGISTRATION
-        # ====================================================
-
-        else:
-
-            clean_first_name = first_name.strip()
-            clean_last_name = last_name.strip()
-            clean_phone = cell_phone.strip()
-            clean_email = email.strip()
-
-            selected_station = chosen_station
-
-            # ------------------------------------------------
-            # FRIDAY
-            # ------------------------------------------------
-
-            friday = (
-                ", ".join(
-                    selected["friday"]
-                )
-                if selected["friday"]
-                else "None"
-            )
-
-            # ------------------------------------------------
-            # SATURDAY
-            # ------------------------------------------------
-
-            saturday = (
-                ", ".join(
-                    selected["saturday"]
-                )
-                if selected["saturday"]
-                else "None"
-            )
-
-            # ------------------------------------------------
-            # SUNDAY
-            # ------------------------------------------------
-
-            sunday = (
-                ", ".join(
-                    selected["sunday"]
-                )
-                if selected["sunday"]
-                else "None"
-            )
-
-            # ------------------------------------------------
-            # NEW JERSEY TIMESTAMP
-            # ------------------------------------------------
-
-            timestamp = datetime.now(
-                TIME_ZONE
-            ).strftime(
-                "%Y-%m-%d %I:%M %p"
-            )
-
-            # =================================================
-            # SAVE TO GOOGLE SHEETS
-            # =================================================
-
-            try:
-
-                reg_sheet.append_row(
-                    [
-                        clean_first_name,
-                        clean_last_name,
-                        clean_phone,
-                        clean_email,
-                        age,
-                        selected_station,
-                        friday,
-                        saturday,
-                        sunday,
-                        timestamp
-                    ],
-                    value_input_option="USER_ENTERED"
-                )
-
-                # ---------------------------------------------
-                # SUCCESS
-                # ---------------------------------------------
-
-                st.success(
-                    f"🎉 Registration Complete! "
-                    f"Thank you, {clean_first_name}!"
-                )
-
-                st.info(
-                    "🙏 We appreciate your willingness "
-                    "to serve our community."
-                )
-
-                st.info(
-                    f"🕐 Registration Time: {timestamp}"
-                )
-
-                # ---------------------------------------------
-                # VERSE
-                # ---------------------------------------------
-
-                import random
-
-                st.info(
-                    "📖 " +
-                    random.choice(
-                        volunteer_verses
-                    )
-                )
-
-            except Exception as e:
-
-                st.error(
-                    "Your registration could not be saved "
-                    "right now. Please contact the volunteer "
-                    "coordinator."
-                )
-
-                with st.expander(
-                    "Show Google Sheets error"
-                ):
-
-                    st.code(
-                        str(e)
-                    )
 
 
 # ============================================================
@@ -752,6 +693,5 @@ st.caption(
 )
 
 st.caption(
-    '"Whatever you do, work at it with all your heart, '
-    'as working for the Lord." — Colossians 3:23'
+    "Thank you for serving with love and dedication ☦️"
 )
