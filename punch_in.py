@@ -8,6 +8,7 @@ QR Code Punch In System
 import random
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 import streamlit as st
@@ -24,6 +25,14 @@ from style import apply_styles
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
 
 PUNCH_IN_SHEET = "Punch In"
+
+
+# ============================================================
+# NEW JERSEY / EASTERN TIME
+# ============================================================
+
+NEW_JERSEY_TIMEZONE = ZoneInfo("America/New_York")
+
 
 # ============================================================
 # PAGE SETTINGS
@@ -119,7 +128,7 @@ try:
 
         raise Exception(
             "gcp_service_account was not found in "
-            ".streamlit/secrets.toml"
+            "Streamlit Secrets."
         )
 
 
@@ -185,7 +194,7 @@ try:
 
 
     # --------------------------------------------------------
-    # SUCCESS
+    # CONNECTION SUCCESSFUL
     # --------------------------------------------------------
 
     SHEETS_ENABLED = True
@@ -336,8 +345,19 @@ if st.button(
         clean_name = name.strip()
         clean_phone = phone.strip()
 
-        # Example: 3:16 PM
-        timestamp = datetime.now().strftime(
+
+        # ----------------------------------------------------
+        # NEW JERSEY / EASTERN TIME
+        # ----------------------------------------------------
+
+        current_nj_time = datetime.now(
+            NEW_JERSEY_TIMEZONE
+        )
+
+
+        # Example:
+        # 3:16 PM
+        timestamp = current_nj_time.strftime(
             "%-I:%M %p"
         )
 
@@ -470,7 +490,7 @@ st.write(
 
 
 # ============================================================
-# QUICK LINKS / INFORMATION
+# WHAT'S NEXT
 # ============================================================
 
 st.subheader(

@@ -4,11 +4,14 @@ St. Anthony Coptic Orthodox Church
 Volunteer Registration System
 """
 
-import os
+import random
+import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 import streamlit as st
+
 from google.oauth2.service_account import Credentials
 
 from style import apply_styles
@@ -22,13 +25,15 @@ SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
 
 REGISTRATION_SHEET = "Registration"
 
+NJ_TIMEZONE = "America/New_York"
+
 
 # ============================================================
 # PAGE SETTINGS
 # ============================================================
 
 st.set_page_config(
-    page_title="St. Anthony Volunteer",
+    page_title="St. Anthony Volunteer Registration",
     page_icon="⛪",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -36,10 +41,22 @@ st.set_page_config(
 
 
 # ============================================================
-# APPLY SAME STYLE AS APP.PY
+# SAME STYLE AS APP.PY
 # ============================================================
 
 apply_styles()
+
+
+# ============================================================
+# LOGGING
+# ============================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -47,22 +64,54 @@ apply_styles()
 # ============================================================
 
 volunteer_verses = [
-    "Each of you should use whatever gift you have received "
-    "to serve others, as faithful stewards of God's grace. "
-    "— 1 Peter 4:10",
+    (
+        "Each of you should use whatever gift you have received "
+        "to serve others, as faithful stewards of God's grace. "
+        "— 1 Peter 4:10"
+    ),
 
-    "Whatever you do, work at it with all your heart, "
-    "as working for the Lord, not for human masters. "
-    "— Colossians 3:23",
+    (
+        "Whatever you do, work at it with all your heart, "
+        "as working for the Lord, not for human masters. "
+        "— Colossians 3:23"
+    ),
 
-    "Serve wholeheartedly, as if you were serving the Lord, "
-    "not people. — Ephesians 6:7",
+    (
+        "Serve wholeheartedly, as if you were serving the Lord, "
+        "not people. — Ephesians 6:7"
+    ),
 
-    "The greatest among you will be your servant. "
-    "— Matthew 23:11",
+    (
+        "The greatest among you will be your servant. "
+        "— Matthew 23:11"
+    ),
 
-    "Carry each other's burdens, and in this way you will "
-    "fulfill the law of Christ. — Galatians 6:2"
+    (
+        "Carry each other's burdens, and in this way you will "
+        "fulfill the law of Christ. — Galatians 6:2"
+    )
+]
+
+
+# ============================================================
+# STATION SETTINGS
+# ============================================================
+
+STATION_NAMES = [
+    "Station 1 - Prizes/Kids Games",
+    "Station 2 - Cosmetology",
+    "Station 3 - Inflatables",
+    "Station 4 - Basketball",
+    "Station 5 - Snacking"
+]
+
+
+STATION_TABS = [
+    "🎁 Prizes",
+    "💄 Cosmetology",
+    "🎈 Inflatables",
+    "🏀 Basketball",
+    "🍿 Snacking"
 ]
 
 
@@ -82,34 +131,54 @@ try:
         "https://www.googleapis.com/auth/drive"
     ]
 
+
     # --------------------------------------------------------
-    # READ STREAMLIT SECRETS
+    # CHECK STREAMLIT SECRETS
     # --------------------------------------------------------
 
     if "gcp_service_account" not in st.secrets:
 
         raise Exception(
             "The gcp_service_account section was not found "
-            "in .streamlit/secrets.toml."
+            "in Streamlit Secrets."
         )
 
+
+    # --------------------------------------------------------
+    # GET SERVICE ACCOUNT FROM SECRETS
+    # --------------------------------------------------------
+
+    service_account_info = dict(
+        st.secrets["gcp_service_account"]
+    )
+
+
+    # --------------------------------------------------------
+    # CREATE GOOGLE CREDENTIALS
+    # --------------------------------------------------------
+
     credentials = Credentials.from_service_account_info(
-        dict(st.secrets["gcp_service_account"]),
+        service_account_info,
         scopes=scope
     )
+
 
     # --------------------------------------------------------
     # CONNECT TO GOOGLE SHEETS
     # --------------------------------------------------------
 
-    client = gspread.authorize(credentials)
+    client = gspread.authorize(
+        credentials
+    )
+
 
     spreadsheet = client.open_by_key(
         SPREADSHEET_ID
     )
 
+
     # --------------------------------------------------------
-    # CHECK REGISTRATION SHEET
+    # CHECK WORKSHEETS
     # --------------------------------------------------------
 
     sheet_names = [
@@ -117,40 +186,62 @@ try:
         for worksheet in spreadsheet.worksheets()
     ]
 
+
+    # --------------------------------------------------------
+    # CHECK REGISTRATION SHEET
+    # --------------------------------------------------------
+
     if REGISTRATION_SHEET not in sheet_names:
 
         raise Exception(
-            f"'{REGISTRATION_SHEET}' was not found. "
+            f"The sheet '{REGISTRATION_SHEET}' was not found. "
             f"Available sheets: {sheet_names}"
         )
+
+
+    # --------------------------------------------------------
+    # OPEN REGISTRATION SHEET
+    # --------------------------------------------------------
 
     reg_sheet = spreadsheet.worksheet(
         REGISTRATION_SHEET
     )
 
+
     SHEETS_ENABLED = True
+
+
+    logger.info(
+        "Google Sheets Registration connected successfully."
+    )
 
 
 except Exception as e:
 
     SHEETS_ENABLED = False
+
     sheets_error = str(e)
 
+    logger.error(
+        "Google Sheets connection failed: %s",
+        e
+    )
+
 
 # ============================================================
-# HERO / HEADER
+# HEADER / LOGO
 # ============================================================
 
-if os.path.exists("stanthonylogo.png"):
+try:
 
     st.image(
         "stanthonylogo.png",
         width=120
     )
 
-else:
+except Exception:
 
-    st.write("⛪")
+    pass
 
 
 st.markdown(
@@ -164,27 +255,6 @@ st.title(
 st.write(
     "Serve with joy. Connect with community."
 )
-
-
-# ============================================================
-# GOOGLE SHEETS ERROR
-# ============================================================
-
-if not SHEETS_ENABLED:
-
-    st.error(
-        "Google Sheets is not connected. "
-        "Your registration cannot be saved."
-    )
-
-    with st.expander(
-        "Show Google Sheets error"
-    ):
-
-        st.code(
-            sheets_error
-            or "Unknown Google Sheets error."
-        )
 
 
 # ============================================================
@@ -213,6 +283,27 @@ st.write(
 
 
 # ============================================================
+# GOOGLE SHEETS ERROR
+# ============================================================
+
+if not SHEETS_ENABLED:
+
+    st.error(
+        "Google Sheets is not connected. "
+        "Your registration cannot be saved."
+    )
+
+    with st.expander(
+        "Show Google Sheets error"
+    ):
+
+        st.code(
+            sheets_error
+            or "Unknown Google Sheets error."
+        )
+
+
+# ============================================================
 # REGISTRATION FORM
 # ============================================================
 
@@ -227,51 +318,70 @@ with st.form("registration_form"):
     )
 
     st.caption(
-        "Fields marked with * are required."
+        "First Name, Last Name, and Cell Phone are required."
     )
+
+
+    # --------------------------------------------------------
+    # FIRST / LAST NAME
+    # --------------------------------------------------------
 
     col1, col2 = st.columns(
         2,
         gap="large"
     )
 
+
     with col1:
 
         first_name = st.text_input(
-            "First Name*",
+            "First Name",
             max_chars=50,
             placeholder="First name"
         )
 
+
     with col2:
 
         last_name = st.text_input(
-            "Last Name*",
+            "Last Name",
             max_chars=50,
             placeholder="Last name"
         )
+
+
+    # --------------------------------------------------------
+    # PHONE / EMAIL
+    # --------------------------------------------------------
 
     col3, col4 = st.columns(
         2,
         gap="large"
     )
 
+
     with col3:
 
         cell_phone = st.text_input(
-            "Cell Phone*",
+            "Cell Phone",
             placeholder="(555) 555-5555"
         )
+
 
     with col4:
 
         email = st.text_input(
-            "Email*",
+            "Email",
             placeholder="you@example.com"
         )
 
+
+    # ========================================================
+    # AGE
+    # ========================================================
+
     age = st.radio(
-        "Age*",
+        "Age",
         [
             "14-18",
             "18+"
@@ -296,29 +406,9 @@ with st.form("registration_form"):
         "that work for you. Station selection is optional."
     )
 
-    STATION_NAMES = [
-
-        "Station 1 - Prizes/Kids Games",
-
-        "Station 2 - Cosmetology",
-
-        "Station 3 - Inflatables",
-
-        "Station 4 - Basketball",
-
-        "Station 5 - Snacking"
-
-    ]
-
 
     station_tabs = st.tabs(
-        [
-            "🎁 Prizes",
-            "💄 Cosmetology",
-            "🎈 Inflatables",
-            "🏀 Basketball",
-            "🍿 Snacking"
-        ]
+        STATION_TABS
     )
 
 
@@ -342,6 +432,7 @@ with st.form("registration_form"):
             "Choose your available volunteer times."
         )
 
+
         day_tabs = st.tabs(
             [
                 "Friday",
@@ -349,6 +440,11 @@ with st.form("registration_form"):
                 "Sunday"
             ]
         )
+
+
+        # ----------------------------------------------------
+        # FRIDAY
+        # ----------------------------------------------------
 
         with day_tabs[0]:
 
@@ -360,6 +456,11 @@ with st.form("registration_form"):
                 ],
                 key=f"station_{number}_friday"
             )
+
+
+        # ----------------------------------------------------
+        # SATURDAY
+        # ----------------------------------------------------
 
         with day_tabs[1]:
 
@@ -374,6 +475,11 @@ with st.form("registration_form"):
                 key=f"station_{number}_saturday"
             )
 
+
+        # ----------------------------------------------------
+        # SUNDAY
+        # ----------------------------------------------------
+
         with day_tabs[2]:
 
             sunday = st.multiselect(
@@ -385,6 +491,7 @@ with st.form("registration_form"):
                 key=f"station_{number}_sunday"
             )
 
+
         return {
             "friday": friday,
             "saturday": saturday,
@@ -393,7 +500,7 @@ with st.form("registration_form"):
 
 
     # ========================================================
-    # CREATE EACH STATION
+    # CREATE STATION 1
     # ========================================================
 
     with station_tabs[0]:
@@ -406,6 +513,10 @@ with st.form("registration_form"):
         )
 
 
+    # ========================================================
+    # CREATE STATION 2
+    # ========================================================
+
     with station_tabs[1]:
 
         station_data[
@@ -415,6 +526,10 @@ with st.form("registration_form"):
             STATION_NAMES[1]
         )
 
+
+    # ========================================================
+    # CREATE STATION 3
+    # ========================================================
 
     with station_tabs[2]:
 
@@ -426,6 +541,10 @@ with st.form("registration_form"):
         )
 
 
+    # ========================================================
+    # CREATE STATION 4
+    # ========================================================
+
     with station_tabs[3]:
 
         station_data[
@@ -435,6 +554,10 @@ with st.form("registration_form"):
             STATION_NAMES[3]
         )
 
+
+    # ========================================================
+    # CREATE STATION 5
+    # ========================================================
 
     with station_tabs[4]:
 
@@ -460,6 +583,7 @@ with st.form("registration_form"):
         "Station selection is optional."
     )
 
+
     chosen_station = st.radio(
         "Which station are you signing up for?",
         STATION_NAMES,
@@ -479,7 +603,7 @@ with st.form("registration_form"):
 
 
     # ========================================================
-    # SAVE REGISTRATION
+    # PROCESS REGISTRATION
     # ========================================================
 
     if submitted:
@@ -488,22 +612,38 @@ with st.form("registration_form"):
         # REQUIRED FIELDS
         # ----------------------------------------------------
 
-        if (
-            not first_name.strip()
-            or not last_name.strip()
-            or not cell_phone.strip()
-            or not email.strip()
-        ):
+        if not first_name.strip():
 
-            st.error(
-                "Please complete all required fields marked with *."
+            st.warning(
+                "Please enter your first name."
             )
 
+            st.stop()
+
+
+        if not last_name.strip():
+
+            st.warning(
+                "Please enter your last name."
+            )
+
+            st.stop()
+
+
+        if not cell_phone.strip():
+
+            st.warning(
+                "Please enter your cell phone number."
+            )
+
+            st.stop()
+
+
         # ----------------------------------------------------
-        # GOOGLE SHEETS
+        # CHECK GOOGLE SHEETS
         # ----------------------------------------------------
 
-        elif not SHEETS_ENABLED:
+        if not SHEETS_ENABLED:
 
             st.error(
                 "Google Sheets is not connected. "
@@ -519,116 +659,181 @@ with st.form("registration_form"):
                     or "Unknown Google Sheets error."
                 )
 
+            st.stop()
+
+
         # ----------------------------------------------------
-        # SAVE
+        # CLEAN DATA
         # ----------------------------------------------------
+
+        clean_first_name = first_name.strip()
+
+        clean_last_name = last_name.strip()
+
+        clean_phone = cell_phone.strip()
+
+        clean_email = email.strip()
+
+
+        # ----------------------------------------------------
+        # OPTIONAL STATION
+        # ----------------------------------------------------
+
+        if chosen_station:
+
+            selected_station = chosen_station
 
         else:
 
-            clean_first_name = first_name.strip()
-            clean_last_name = last_name.strip()
-            clean_phone = cell_phone.strip()
-            clean_email = email.strip()
+            selected_station = "Not Selected"
 
-            # Station is OPTIONAL
-            selected_station = (
-                chosen_station
-                if chosen_station
-                else "Not Selected"
+
+        # ----------------------------------------------------
+        # GET SELECTED STATION TIMES
+        # ----------------------------------------------------
+
+        selected = station_data.get(
+            chosen_station,
+            {
+                "friday": [],
+                "saturday": [],
+                "sunday": []
+            }
+        )
+
+
+        # ----------------------------------------------------
+        # FRIDAY AVAILABILITY
+        # ----------------------------------------------------
+
+        friday = (
+            ", ".join(selected["friday"])
+            if selected["friday"]
+            else "None"
+        )
+
+
+        # ----------------------------------------------------
+        # SATURDAY AVAILABILITY
+        # ----------------------------------------------------
+
+        saturday = (
+            ", ".join(selected["saturday"])
+            if selected["saturday"]
+            else "None"
+        )
+
+
+        # ----------------------------------------------------
+        # SUNDAY AVAILABILITY
+        # ----------------------------------------------------
+
+        sunday = (
+            ", ".join(selected["sunday"])
+            if selected["sunday"]
+            else "None"
+        )
+
+
+        # ====================================================
+        # NEW JERSEY TIMESTAMP
+        # ====================================================
+
+        nj_time = datetime.now(
+            ZoneInfo(NJ_TIMEZONE)
+        )
+
+
+        timestamp = nj_time.strftime(
+            "%Y-%m-%d %I:%M %p"
+        )
+
+
+        # ====================================================
+        # SAVE TO GOOGLE SHEETS
+        # ====================================================
+
+        try:
+
+            reg_sheet.append_row(
+                [
+                    clean_first_name,
+                    clean_last_name,
+                    clean_phone,
+                    clean_email,
+                    age,
+                    selected_station,
+                    friday,
+                    saturday,
+                    sunday,
+                    timestamp
+                ],
+                value_input_option="USER_ENTERED"
             )
 
-            # ------------------------------------------------
-            # AVAILABILITY
-            # ------------------------------------------------
 
-            selected = station_data.get(
-                chosen_station,
-                {
-                    "friday": [],
-                    "saturday": [],
-                    "sunday": []
-                }
+            logger.info(
+                "Registration saved: %s %s - %s",
+                clean_first_name,
+                clean_last_name,
+                timestamp
             )
 
-            friday = (
-                ", ".join(selected["friday"])
-                if selected["friday"]
-                else "None"
-            )
-
-            saturday = (
-                ", ".join(selected["saturday"])
-                if selected["saturday"]
-                else "None"
-            )
-
-            sunday = (
-                ", ".join(selected["sunday"])
-                if selected["sunday"]
-                else "None"
-            )
 
             # ------------------------------------------------
-            # TIMESTAMP
+            # SUCCESS
             # ------------------------------------------------
 
-            timestamp = datetime.now().strftime(
-                "%Y-%m-%d %I:%M %p"
+            st.success(
+                f"🎉 Registration Complete! "
+                f"Thank you, {clean_first_name}!"
             )
 
-            # ------------------------------------------------
-            # SAVE TO GOOGLE SHEETS
-            # ------------------------------------------------
 
-            try:
+            st.info(
+                "🙏 We appreciate your willingness "
+                "to serve our community."
+            )
 
-                reg_sheet.append_row(
-                    [
-                        clean_first_name,
-                        clean_last_name,
-                        clean_phone,
-                        clean_email,
-                        age,
-                        selected_station,
-                        friday,
-                        saturday,
-                        sunday,
-                        timestamp
-                    ],
-                    value_input_option="USER_ENTERED"
+
+            st.info(
+                f"🕐 Registration Time: {timestamp}"
+            )
+
+
+            st.info(
+                "📖 " +
+                random.choice(
+                    volunteer_verses
                 )
+            )
 
-                # --------------------------------------------
-                # SUCCESS
-                # --------------------------------------------
 
-                st.success(
-                    f"🎉 Registration Complete! "
-                    f"Thank you, {clean_first_name}!"
+            st.balloons()
+
+
+        except Exception as e:
+
+            logger.error(
+                "Registration save failed: %s",
+                e
+            )
+
+
+            st.error(
+                "Your registration could not be saved "
+                "right now. Please contact the volunteer "
+                "coordinator."
+            )
+
+
+            with st.expander(
+                "Show Google Sheets error"
+            ):
+
+                st.code(
+                    str(e)
                 )
-
-                st.info(
-                    "🙏 We appreciate your willingness "
-                    "to serve our community."
-                )
-
-                st.balloons()
-
-            except Exception as e:
-
-                st.error(
-                    "❌ Your registration could not be saved "
-                    "right now. Please contact the volunteer "
-                    "coordinator."
-                )
-
-                with st.expander(
-                    "Show Google Sheets error"
-                ):
-
-                    st.code(
-                        str(e)
-                    )
 
 
 # ============================================================
@@ -644,3 +849,4 @@ st.caption(
 st.caption(
     "St. Anthony Coptic Orthodox Church Volunteer System"
 )
+

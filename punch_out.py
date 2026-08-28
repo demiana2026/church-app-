@@ -8,6 +8,7 @@ QR Code Punch Out System
 import random
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 import streamlit as st
@@ -24,6 +25,13 @@ from style import apply_styles
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
 
 PUNCH_OUT_SHEET = "Punch Out"
+
+
+# ============================================================
+# NEW JERSEY / EASTERN TIME
+# ============================================================
+
+NEW_JERSEY_TIMEZONE = ZoneInfo("America/New_York")
 
 
 # ============================================================
@@ -121,7 +129,7 @@ try:
 
         raise Exception(
             "gcp_service_account was not found in "
-            ".streamlit/secrets.toml"
+            "Streamlit Secrets."
         )
 
 
@@ -187,6 +195,10 @@ try:
         PUNCH_OUT_SHEET
     )
 
+
+    # --------------------------------------------------------
+    # CONNECTION SUCCESSFUL
+    # --------------------------------------------------------
 
     SHEETS_ENABLED = True
 
@@ -336,8 +348,19 @@ if st.button(
         clean_name = name.strip()
         clean_phone = phone.strip()
 
-        # Format: 3:16 PM
-        timestamp = datetime.now().strftime(
+
+        # ----------------------------------------------------
+        # NEW JERSEY / EASTERN TIME
+        # ----------------------------------------------------
+
+        current_nj_time = datetime.now(
+            NEW_JERSEY_TIMEZONE
+        )
+
+
+        # Example:
+        # 3:16 PM
+        timestamp = current_nj_time.strftime(
             "%-I:%M %p"
         )
 
@@ -428,6 +451,10 @@ if st.button(
                 "St. Anthony community!"
             )
 
+
+            # ------------------------------------------------
+            # CELEBRATION
+            # ------------------------------------------------
 
             st.balloons()
 
