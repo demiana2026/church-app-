@@ -5,15 +5,14 @@ Volunteer Punch In App
 QR Code Punch In System
 """
 
-import random
 import logging
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import gspread
 import streamlit as st
-
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 from style import apply_styles
 
@@ -23,15 +22,10 @@ from style import apply_styles
 # ============================================================
 
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
-
 PUNCH_IN_SHEET = "Punch In"
 
-
-# ============================================================
-# NEW JERSEY / EASTERN TIME
-# ============================================================
-
-NEW_JERSEY_TIMEZONE = ZoneInfo("America/New_York")
+# New Jersey time
+TIME_ZONE = ZoneInfo("America/New_York")
 
 
 # ============================================================
@@ -47,7 +41,7 @@ st.set_page_config(
 
 
 # ============================================================
-# SAME STYLE AS APP.PY
+# STYLE
 # ============================================================
 
 apply_styles()
@@ -66,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# VOLUNTEER VERSES
+# VERSES
 # ============================================================
 
 volunteer_verses = [
@@ -75,23 +69,19 @@ volunteer_verses = [
         "to serve others, as faithful stewards of God's grace. "
         "— 1 Peter 4:10"
     ),
-
     (
         "Whatever you do, work at it with all your heart, "
         "as working for the Lord, not for human masters. "
         "— Colossians 3:23"
     ),
-
     (
         "Serve wholeheartedly, as if you were serving the Lord, "
         "not people. — Ephesians 6:7"
     ),
-
     (
         "The greatest among you will be your servant. "
         "— Matthew 23:11"
     ),
-
     (
         "Carry each other's burdens, and in this way you will "
         "fulfill the law of Christ. — Galatians 6:2"
@@ -107,74 +97,39 @@ SHEETS_ENABLED = False
 punch_in_sheet = None
 sheets_error = None
 
-
 try:
-
-    # --------------------------------------------------------
-    # GOOGLE API SCOPE
-    # --------------------------------------------------------
 
     scope = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
 
-
-    # --------------------------------------------------------
-    # CHECK STREAMLIT SECRETS
-    # --------------------------------------------------------
-
     if "gcp_service_account" not in st.secrets:
 
         raise Exception(
-            "gcp_service_account was not found in "
-            "Streamlit Secrets."
+            "The gcp_service_account section was not found "
+            "in Streamlit secrets."
         )
-
-
-    # --------------------------------------------------------
-    # GET SERVICE ACCOUNT FROM SECRETS
-    # --------------------------------------------------------
 
     service_account_info = dict(
         st.secrets["gcp_service_account"]
     )
 
-
-    # --------------------------------------------------------
-    # CREATE GOOGLE CREDENTIALS
-    # --------------------------------------------------------
-
-    credentials = (
-        ServiceAccountCredentials
-        .from_json_keyfile_dict(
-            service_account_info,
-            scope
-        )
+    credentials = Credentials.from_service_account_info(
+        service_account_info,
+        scopes=scope
     )
 
-
-    # --------------------------------------------------------
-    # CONNECT TO GOOGLE SHEETS
-    # --------------------------------------------------------
-
     client = gspread.authorize(credentials)
-
 
     spreadsheet = client.open_by_key(
         SPREADSHEET_ID
     )
 
-
-    # --------------------------------------------------------
-    # CHECK WORKSHEETS
-    # --------------------------------------------------------
-
     sheet_names = [
         worksheet.title
         for worksheet in spreadsheet.worksheets()
     ]
-
 
     if PUNCH_IN_SHEET not in sheet_names:
 
@@ -183,31 +138,15 @@ try:
             f"Available sheets: {sheet_names}"
         )
 
-
-    # --------------------------------------------------------
-    # OPEN PUNCH IN SHEET
-    # --------------------------------------------------------
-
     punch_in_sheet = spreadsheet.worksheet(
         PUNCH_IN_SHEET
     )
 
-
-    # --------------------------------------------------------
-    # CONNECTION SUCCESSFUL
-    # --------------------------------------------------------
-
     SHEETS_ENABLED = True
-
-    logger.info(
-        "Google Sheets Punch In connected successfully."
-    )
-
 
 except Exception as e:
 
     SHEETS_ENABLED = False
-
     sheets_error = str(e)
 
     logger.error(
@@ -217,7 +156,7 @@ except Exception as e:
 
 
 # ============================================================
-# HEADER / LOGO
+# HEADER
 # ============================================================
 
 try:
@@ -229,7 +168,7 @@ try:
 
 except Exception:
 
-    pass
+    st.write("⛪")
 
 
 st.markdown(
@@ -246,7 +185,7 @@ st.write(
 
 
 # ============================================================
-# PUNCH IN INTRODUCTION
+# PUNCH IN
 # ============================================================
 
 st.divider()
@@ -261,30 +200,22 @@ st.write(
 )
 
 
-# ============================================================
-# NAME
-# ============================================================
-
 name = st.text_input(
-    "Full Name",
+    "Full Name*",
     placeholder="Enter your full name",
     key="punch_in_name"
 )
 
 
-# ============================================================
-# PHONE
-# ============================================================
-
 phone = st.text_input(
-    "Cell Phone",
+    "Cell Phone*",
     placeholder="Enter your cell phone number",
     key="punch_in_phone"
 )
 
 
 # ============================================================
-# PUNCH IN BUTTON
+# BUTTON
 # ============================================================
 
 if st.button(
@@ -293,31 +224,17 @@ if st.button(
     use_container_width=True
 ):
 
-    # --------------------------------------------------------
-    # VALIDATE NAME
-    # --------------------------------------------------------
-
     if not name.strip():
 
         st.warning(
             "Please enter your full name."
         )
 
-
-    # --------------------------------------------------------
-    # VALIDATE PHONE
-    # --------------------------------------------------------
-
     elif not phone.strip():
 
         st.warning(
             "Please enter your cell phone number."
         )
-
-
-    # --------------------------------------------------------
-    # CHECK GOOGLE SHEETS
-    # --------------------------------------------------------
 
     elif not SHEETS_ENABLED:
 
@@ -331,42 +248,21 @@ if st.button(
         ):
 
             st.code(
-                sheets_error
-                or "Unknown Google Sheets error."
+                sheets_error or "Unknown Google Sheets error."
             )
-
-
-    # --------------------------------------------------------
-    # SAVE PUNCH IN
-    # --------------------------------------------------------
 
     else:
 
         clean_name = name.strip()
         clean_phone = phone.strip()
 
-
-        # ----------------------------------------------------
-        # NEW JERSEY / EASTERN TIME
-        # ----------------------------------------------------
-
-        current_nj_time = datetime.now(
-            NEW_JERSEY_TIMEZONE
+        timestamp = datetime.now(
+            TIME_ZONE
+        ).strftime(
+            "%Y-%m-%d %I:%M %p"
         )
-
-
-        # Example:
-        # 3:16 PM
-        timestamp = current_nj_time.strftime(
-            "%-I:%M %p"
-        )
-
 
         try:
-
-            # ------------------------------------------------
-            # SAVE TO PUNCH IN SHEET
-            # ------------------------------------------------
 
             punch_in_sheet.append_row(
                 [
@@ -378,7 +274,6 @@ if st.button(
                 value_input_option="USER_ENTERED"
             )
 
-
             logger.info(
                 "Punch IN saved: %s - %s - %s",
                 clean_name,
@@ -386,41 +281,19 @@ if st.button(
                 timestamp
             )
 
-
-            # ------------------------------------------------
-            # SUCCESS MESSAGE
-            # ------------------------------------------------
-
             st.success(
                 f"👋 Welcome {clean_name}! "
                 "You've successfully punched in."
             )
 
-
-            # ------------------------------------------------
-            # TIME
-            # ------------------------------------------------
-
             st.info(
                 f"🕐 Punch In Time: {timestamp}"
             )
 
-
-            # ------------------------------------------------
-            # VERSE
-            # ------------------------------------------------
-
             st.info(
                 "📖 " +
-                random.choice(
-                    volunteer_verses
-                )
+                random.choice(volunteer_verses)
             )
-
-
-            # ------------------------------------------------
-            # THANK YOU
-            # ------------------------------------------------
 
             st.subheader(
                 "🙏 Thank You for Serving!"
@@ -432,21 +305,12 @@ if st.button(
                 "volunteer work today!"
             )
 
-
-            # ------------------------------------------------
-            # CELEBRATION
-            # ------------------------------------------------
-
-            st.balloons()
-
-
         except Exception as e:
 
             logger.error(
                 "Punch IN failed: %s",
                 e
             )
-
 
             st.error(
                 "Your punch in could not be saved right now. "
@@ -457,9 +321,7 @@ if st.button(
                 "Show Google Sheets error"
             ):
 
-                st.code(
-                    str(e)
-                )
+                st.code(str(e))
 
 
 # ============================================================
@@ -499,7 +361,6 @@ st.subheader(
 
 col1, col2 = st.columns(2)
 
-
 with col1:
 
     st.info(
@@ -507,7 +368,6 @@ with col1:
         "Use the Punch Out QR code when "
         "your volunteer service is complete."
     )
-
 
 with col2:
 
