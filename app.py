@@ -1,5 +1,4 @@
 
-
 """
 St. Anthony Coptic Orthodox Church
 Volunteer Registration System
@@ -20,6 +19,7 @@ from style import apply_styles
 # ============================================================
 
 SPREADSHEET_ID = "1hCAZ77PfCl-OoC6nra_HJTG_m8tAirrDpb9lrt3ueE0"
+
 REGISTRATION_SHEET = "Registration"
 
 # New Jersey / Eastern Time
@@ -46,12 +46,43 @@ apply_styles()
 
 
 # ============================================================
+# VOLUNTEER VERSES
+# ============================================================
+
+volunteer_verses = [
+    (
+        "Each of you should use whatever gift you have received "
+        "to serve others, as faithful stewards of God's grace. "
+        "— 1 Peter 4:10"
+    ),
+    (
+        "Whatever you do, work at it with all your heart, "
+        "as working for the Lord, not for human masters. "
+        "— Colossians 3:23"
+    ),
+    (
+        "Serve wholeheartedly, as if you were serving the Lord, "
+        "not people. — Ephesians 6:7"
+    ),
+    (
+        "The greatest among you will be your servant. "
+        "— Matthew 23:11"
+    ),
+    (
+        "Carry each other's burdens, and in this way you will "
+        "fulfill the law of Christ. — Galatians 6:2"
+    )
+]
+
+
+# ============================================================
 # GOOGLE SHEETS CONNECTION
 # ============================================================
 
 SHEETS_ENABLED = False
 reg_sheet = None
 sheets_error = None
+
 
 try:
 
@@ -60,27 +91,47 @@ try:
         "https://www.googleapis.com/auth/drive"
     ]
 
+    # --------------------------------------------------------
+    # CHECK STREAMLIT SECRETS
+    # --------------------------------------------------------
+
     if "gcp_service_account" not in st.secrets:
 
         raise Exception(
             "The gcp_service_account section was not found "
-            "in Streamlit secrets."
+            "in Streamlit Secrets."
         )
+
+    # --------------------------------------------------------
+    # READ SERVICE ACCOUNT FROM SECRETS
+    # --------------------------------------------------------
 
     service_account_info = dict(
         st.secrets["gcp_service_account"]
     )
+
+    # --------------------------------------------------------
+    # CREATE GOOGLE CREDENTIALS
+    # --------------------------------------------------------
 
     credentials = Credentials.from_service_account_info(
         service_account_info,
         scopes=scope
     )
 
+    # --------------------------------------------------------
+    # CONNECT TO GOOGLE SHEETS
+    # --------------------------------------------------------
+
     client = gspread.authorize(credentials)
 
     spreadsheet = client.open_by_key(
         SPREADSHEET_ID
     )
+
+    # --------------------------------------------------------
+    # CHECK REGISTRATION SHEET
+    # --------------------------------------------------------
 
     sheet_names = [
         worksheet.title
@@ -94,11 +145,16 @@ try:
             f"Available sheets: {sheet_names}"
         )
 
+    # --------------------------------------------------------
+    # OPEN REGISTRATION SHEET
+    # --------------------------------------------------------
+
     reg_sheet = spreadsheet.worksheet(
         REGISTRATION_SHEET
     )
 
     SHEETS_ENABLED = True
+
 
 except Exception as e:
 
@@ -136,7 +192,7 @@ st.write(
 
 
 # ============================================================
-# GOOGLE SHEETS ERROR
+# GOOGLE SHEETS CONNECTION STATUS
 # ============================================================
 
 if not SHEETS_ENABLED:
@@ -146,10 +202,13 @@ if not SHEETS_ENABLED:
         "Your registration cannot be saved."
     )
 
-    with st.expander("Show Google Sheets error"):
+    with st.expander(
+        "Show Google Sheets error"
+    ):
 
         st.code(
-            sheets_error or "Unknown Google Sheets error."
+            sheets_error
+            or "Unknown Google Sheets error."
         )
 
 
@@ -165,7 +224,7 @@ st.info(
 
 
 # ============================================================
-# REGISTRATION
+# REGISTRATION TITLE
 # ============================================================
 
 st.header(
@@ -191,9 +250,24 @@ STATION_NAMES = [
 ]
 
 
+STATION_TABS = [
+    "🎁 Prizes",
+    "💄 Cosmetology",
+    "🎈 Inflatables",
+    "🏀 Basketball",
+    "🍿 Snacking"
+]
+
+
+# ============================================================
+# CREATE STATION
+# ============================================================
+
 def create_station(number, station_name):
 
-    st.subheader(station_name)
+    st.subheader(
+        station_name
+    )
 
     st.caption(
         "Choose your available volunteer times."
@@ -207,6 +281,10 @@ def create_station(number, station_name):
         ]
     )
 
+    # --------------------------------------------------------
+    # FRIDAY
+    # --------------------------------------------------------
+
     with day_tabs[0]:
 
         friday = st.multiselect(
@@ -217,6 +295,10 @@ def create_station(number, station_name):
             ],
             key=f"station_{number}_friday"
         )
+
+    # --------------------------------------------------------
+    # SATURDAY
+    # --------------------------------------------------------
 
     with day_tabs[1]:
 
@@ -230,6 +312,10 @@ def create_station(number, station_name):
             ],
             key=f"station_{number}_saturday"
         )
+
+    # --------------------------------------------------------
+    # SUNDAY
+    # --------------------------------------------------------
 
     with day_tabs[2]:
 
@@ -253,7 +339,9 @@ def create_station(number, station_name):
 # REGISTRATION FORM
 # ============================================================
 
-with st.form("registration_form"):
+with st.form(
+    "registration_form"
+):
 
     # ========================================================
     # PERSONAL INFORMATION
@@ -266,6 +354,10 @@ with st.form("registration_form"):
     st.caption(
         "All fields are required."
     )
+
+    # --------------------------------------------------------
+    # FIRST / LAST NAME
+    # --------------------------------------------------------
 
     col1, col2 = st.columns(
         2,
@@ -288,6 +380,10 @@ with st.form("registration_form"):
             placeholder="Last name"
         )
 
+    # --------------------------------------------------------
+    # PHONE / EMAIL
+    # --------------------------------------------------------
+
     col3, col4 = st.columns(
         2,
         gap="large"
@@ -307,6 +403,10 @@ with st.form("registration_form"):
             placeholder="you@example.com"
         )
 
+    # --------------------------------------------------------
+    # AGE
+    # --------------------------------------------------------
+
     age = st.radio(
         "Age*",
         [
@@ -316,7 +416,6 @@ with st.form("registration_form"):
         horizontal=True,
         key="age"
     )
-
 
     # ========================================================
     # CHOOSE YOUR STATION
@@ -329,26 +428,22 @@ with st.form("registration_form"):
     )
 
     st.write(
-        "Select the station where you would like to volunteer "
-        "and choose your available times."
+        "Select the station where you would like to volunteer."
     )
 
+    # --------------------------------------------------------
+    # STATION TABS
+    # --------------------------------------------------------
+
     station_tabs = st.tabs(
-        [
-            "🎁 Prizes",
-            "💄 Cosmetology",
-            "🎈 Inflatables",
-            "🏀 Basketball",
-            "🍿 Snacking"
-        ]
+        STATION_TABS
     )
 
     station_data = {}
 
-
-    # ========================================================
+    # --------------------------------------------------------
     # STATION 1
-    # ========================================================
+    # --------------------------------------------------------
 
     with station_tabs[0]:
 
@@ -359,10 +454,9 @@ with st.form("registration_form"):
             STATION_NAMES[0]
         )
 
-
-    # ========================================================
+    # --------------------------------------------------------
     # STATION 2
-    # ========================================================
+    # --------------------------------------------------------
 
     with station_tabs[1]:
 
@@ -373,10 +467,9 @@ with st.form("registration_form"):
             STATION_NAMES[1]
         )
 
-
-    # ========================================================
+    # --------------------------------------------------------
     # STATION 3
-    # ========================================================
+    # --------------------------------------------------------
 
     with station_tabs[2]:
 
@@ -387,10 +480,9 @@ with st.form("registration_form"):
             STATION_NAMES[2]
         )
 
-
-    # ========================================================
+    # --------------------------------------------------------
     # STATION 4
-    # ========================================================
+    # --------------------------------------------------------
 
     with station_tabs[3]:
 
@@ -401,10 +493,9 @@ with st.form("registration_form"):
             STATION_NAMES[3]
         )
 
-
-    # ========================================================
+    # --------------------------------------------------------
     # STATION 5
-    # ========================================================
+    # --------------------------------------------------------
 
     with station_tabs[4]:
 
@@ -415,16 +506,11 @@ with st.form("registration_form"):
             STATION_NAMES[4]
         )
 
-
     # ========================================================
-    # CONFIRM STATION
+    # STATION SELECTION
     # ========================================================
 
     st.divider()
-
-    st.subheader(
-        "Confirm Your Station*"
-    )
 
     chosen_station = st.radio(
         "Which station are you signing up for?*",
@@ -432,7 +518,6 @@ with st.form("registration_form"):
         index=None,
         key="chosen_station"
     )
-
 
     # ========================================================
     # SUBMIT
@@ -445,13 +530,13 @@ with st.form("registration_form"):
 
 
 # ============================================================
-# SAVE REGISTRATION
+# PROCESS REGISTRATION
 # ============================================================
 
 if submitted:
 
     # ========================================================
-    # VALIDATE REQUIRED PERSONAL INFORMATION
+    # REQUIRED PERSONAL INFORMATION
     # ========================================================
 
     if not first_name.strip():
@@ -478,21 +563,19 @@ if submitted:
             "Please enter your Email."
         )
 
-    elif not age:
+    # ========================================================
+    # STATION REQUIRED
+    # ========================================================
+
+    elif chosen_station is None:
 
         st.error(
-            "Please select your Age."
+            "Please select a volunteer station."
         )
 
     # ========================================================
-    # VALIDATE STATION
+    # AVAILABILITY REQUIRED
     # ========================================================
-
-    elif not chosen_station:
-
-        st.error(
-            "Please select which station you are signing up for."
-        )
 
     else:
 
@@ -505,21 +588,17 @@ if submitted:
             }
         )
 
-        # ====================================================
-        # VALIDATE AVAILABILITY
-        # ====================================================
-
-        total_times = (
-            selected["friday"]
-            + selected["saturday"]
-            + selected["sunday"]
+        has_availability = (
+            len(selected["friday"]) > 0
+            or len(selected["saturday"]) > 0
+            or len(selected["sunday"]) > 0
         )
 
-        if not total_times:
+        if not has_availability:
 
             st.error(
-                "Please select at least one available "
-                "volunteer time for your chosen station."
+                "Please select at least one "
+                "volunteer availability time."
             )
 
         # ====================================================
@@ -538,11 +617,12 @@ if submitted:
             ):
 
                 st.code(
-                    sheets_error or "Unknown Google Sheets error."
+                    sheets_error
+                    or "Unknown Google Sheets error."
                 )
 
         # ====================================================
-        # SAVE
+        # SAVE REGISTRATION
         # ====================================================
 
         else:
@@ -554,35 +634,51 @@ if submitted:
 
             selected_station = chosen_station
 
+            # ------------------------------------------------
+            # FRIDAY
+            # ------------------------------------------------
+
             friday = (
-                ", ".join(selected["friday"])
+                ", ".join(
+                    selected["friday"]
+                )
                 if selected["friday"]
                 else "None"
             )
 
+            # ------------------------------------------------
+            # SATURDAY
+            # ------------------------------------------------
+
             saturday = (
-                ", ".join(selected["saturday"])
+                ", ".join(
+                    selected["saturday"]
+                )
                 if selected["saturday"]
                 else "None"
             )
 
+            # ------------------------------------------------
+            # SUNDAY
+            # ------------------------------------------------
+
             sunday = (
-                ", ".join(selected["sunday"])
+                ", ".join(
+                    selected["sunday"]
+                )
                 if selected["sunday"]
                 else "None"
             )
 
-
-            # =================================================
-            # NEW JERSEY TIME
-            # =================================================
+            # ------------------------------------------------
+            # NEW JERSEY TIMESTAMP
+            # ------------------------------------------------
 
             timestamp = datetime.now(
                 TIME_ZONE
             ).strftime(
                 "%Y-%m-%d %I:%M %p"
             )
-
 
             # =================================================
             # SAVE TO GOOGLE SHEETS
@@ -606,10 +702,9 @@ if submitted:
                     value_input_option="USER_ENTERED"
                 )
 
-
-                # =============================================
+                # ---------------------------------------------
                 # SUCCESS
-                # =============================================
+                # ---------------------------------------------
 
                 st.success(
                     f"🎉 Registration Complete! "
@@ -625,16 +720,25 @@ if submitted:
                     f"🕐 Registration Time: {timestamp}"
                 )
 
+                # ---------------------------------------------
+                # VERSE
+                # ---------------------------------------------
 
-            # =================================================
-            # SAVE ERROR
-            # =================================================
+                import random
+
+                st.info(
+                    "📖 " +
+                    random.choice(
+                        volunteer_verses
+                    )
+                )
 
             except Exception as e:
 
                 st.error(
-                    "Your registration could not be saved right now. "
-                    "Please contact the volunteer coordinator."
+                    "Your registration could not be saved "
+                    "right now. Please contact the volunteer "
+                    "coordinator."
                 )
 
                 with st.expander(
@@ -660,3 +764,7 @@ st.caption(
     "St. Anthony Coptic Orthodox Church Volunteer System"
 )
 
+st.caption(
+    '"Whatever you do, work at it with all your heart, '
+    'as working for the Lord." — Colossians 3:23'
+)
