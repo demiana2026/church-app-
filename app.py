@@ -507,19 +507,6 @@ with st.form(
         )
 
     # ========================================================
-    # STATION SELECTION
-    # ========================================================
-
-    st.divider()
-
-    chosen_station = st.radio(
-        "Which station are you signing up for?*",
-        STATION_NAMES,
-        index=None,
-        key="chosen_station"
-    )
-
-    # ========================================================
     # SUBMIT
     # ========================================================
 
